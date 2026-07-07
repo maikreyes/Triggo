@@ -35,6 +35,9 @@ func (s *Services) ValidatedHash(signature string, payload []byte) error {
 
 	calculatedHash := mac.Sum(nil)
 
+	log.Printf("decoded:%s\n", decoded)
+	log.Printf("calculatedHash:%s\n", calculatedHash)
+
 	if !hmac.Equal(decoded, calculatedHash) {
 		return errors.New("The signature is invalid")
 	}
