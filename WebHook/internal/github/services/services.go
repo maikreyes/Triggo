@@ -6,6 +6,8 @@ type Services struct {
 	Config *config.Config
 }
 
-func NewSercies() *Services {
-	return &Services{}
+func NewSercies(config *config.Config) *Services {
+	return &Services{
+		Config: config,
+	}
 }
