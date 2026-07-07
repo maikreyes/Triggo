@@ -3,6 +3,7 @@ package services
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"triggo/pkg/github/model/push"
 )
 
@@ -12,7 +13,7 @@ func (s *Services) DecodeMessage(event string, body []byte) {
 	case "branch":
 		fmt.Println("In this case the event it´s a branch")
 	case "push":
-		fmt.Println("In this case the event it´s a a push")
+		log.Println("In this case the event it´s a a push")
 
 		var push push.GithubPush
 
@@ -25,7 +26,7 @@ func (s *Services) DecodeMessage(event string, body []byte) {
 
 		message := "Se ha hecho un cambio en la rama: " + push.Ref + "\nPor el siguiente usuario: " + push.Pusher.Name + "\n"
 
-		fmt.Println(message)
+		log.Println(message)
 
 	default:
 		fmt.Printf("In this case the event is: %s \n", event)
