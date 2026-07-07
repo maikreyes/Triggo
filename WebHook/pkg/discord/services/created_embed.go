@@ -1,8 +1,6 @@
 package services
 
-import (
-	embed "triggo/pkg/discord/model/Embed"
-)
+import "triggo/pkg/discord/model/embed"
 
 func (s *Services) CreateEmbed(event string, message string) embed.Embed {
 

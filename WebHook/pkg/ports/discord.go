@@ -1,7 +1,7 @@
 package ports
 
 import (
-	embed "triggo/pkg/discord/model/Embed"
+	"triggo/pkg/discord/model/embed"
 	"triggo/pkg/discord/model/payload"
 )
 

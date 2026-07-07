@@ -1,6 +1,6 @@
 package payload
 
-import embed "triggo/pkg/discord/model/Embed"
+import "triggo/pkg/discord/model/embed"
 
 type Payload struct {
 	Username  string        `json:"username,omitempty"`
