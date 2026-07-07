@@ -3,8 +3,9 @@ package api
 import (
 	"net/http"
 	"triggo/pkg/config"
+	DServices "triggo/pkg/discord/services"
 	"triggo/pkg/github/handler"
-	"triggo/pkg/github/services"
+	GServices "triggo/pkg/github/services"
 )
 
 func Webhook(w http.ResponseWriter, r *http.Request) {
@@ -12,9 +13,13 @@ func Webhook(w http.ResponseWriter, r *http.Request) {
 	config := config.NewConfig()
 
 	//GitHub configuration
-	GithubServices := services.NewSercies(config)
-	GithubHandler := handler.Newhandler(GithubServices)
+	GithubServices := GServices.NewServices(config)
 
-	GithubHandler.WebhookHandler(w, r)
+	//Discord Cinfiguration
+	DiscordServices := DServices.NewServices(config)
+
+	Handler := handler.Newhandler(GithubServices, DiscordServices)
+
+	Handler.WebhookHandler(w, r)
 
 }

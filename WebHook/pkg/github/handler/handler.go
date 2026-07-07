@@ -5,11 +5,13 @@ import (
 )
 
 type Handler struct {
-	Services ports.GithubServices
+	GServices ports.GithubServices
+	DServices ports.DiscordServices
 }
 
-func Newhandler(s ports.GithubServices) *Handler {
+func Newhandler(gs ports.GithubServices, ds ports.DiscordServices) *Handler {
 	return &Handler{
-		Services: s,
+		GServices: gs,
+		DServices: ds,
 	}
 }
