@@ -4,10 +4,6 @@ import "fmt"
 
 func (s *Services) DecodeMessage(event string, body string) {
 
-	fmt.Println("=== PAYLOAD RECIBIDO ===")
-	fmt.Println(body)
-	fmt.Println("========================")
-
 	switch event {
 	case "branch":
 		fmt.Println("In this case the event it´s a branch")
@@ -16,5 +12,9 @@ func (s *Services) DecodeMessage(event string, body string) {
 	default:
 		fmt.Printf("In this case the event is: %s \n", event)
 	}
+
+	fmt.Println("=== PAYLOAD RECIBIDO ===")
+	fmt.Println(body)
+	fmt.Println("========================")
 
 }
