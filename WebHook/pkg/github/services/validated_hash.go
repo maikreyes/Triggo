@@ -15,6 +15,8 @@ func (s *Services) ValidatedHash(signature string, payload []byte) error {
 
 	hash := strings.TrimPrefix(signature, "sha256=")
 
+	log.Println(hash)
+
 	if hash == "" {
 		return errors.New("Signature invalid")
 	}
