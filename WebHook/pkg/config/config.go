@@ -8,6 +8,6 @@ type Config struct {
 
 func NewConfig() *Config {
 	return &Config{
-		Secret: os.Getenv("GITHHUB_WEBHOOK_SECRET"),
+		Secret: os.Getenv("GITHUB_WEBHOOK_SECRET"),
 	}
 }
