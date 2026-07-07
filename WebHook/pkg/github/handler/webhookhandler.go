@@ -2,6 +2,7 @@ package handler
 
 import (
 	"io"
+	"log"
 	"net/http"
 )
 
@@ -24,6 +25,7 @@ func (h *Handler) WebhookHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		http.Error(w, "Error to validated", http.StatusUnauthorized)
+		log.Println(err)
 		return
 	}
 
