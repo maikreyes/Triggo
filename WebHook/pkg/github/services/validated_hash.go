@@ -5,10 +5,13 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
+	"log"
 	"strings"
 )
 
 func (s *Services) ValidatedHash(signature string, payload []byte) error {
+
+	log.Println(signature)
 
 	hash := strings.TrimPrefix(signature, "sha256=")
 
