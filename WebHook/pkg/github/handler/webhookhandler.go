@@ -29,7 +29,7 @@ func (h *Handler) WebhookHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.Services.DecodeMessage(event, string(bodyBites))
+	h.Services.DecodeMessage(event, bodyBites)
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Webhook received and successfully validated."))
