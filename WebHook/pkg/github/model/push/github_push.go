@@ -1,10 +1,12 @@
 package push
 
-import "triggo/pkg/github/model/commit"
+import (
+	"triggo/pkg/github/model/pusher"
+	"triggo/pkg/github/model/repository"
+)
 
 type GithubPush struct {
-	Commit     commit.GithubCommit `json:"head_commit"`
-	Ref        string              `json:"ref"`
-	Repository string              `json:"repository"`
-	Sender     string              `json:"sender"`
+	Ref        string                `json:"ref"`
+	Repository repository.Repository `json:"repository"`
+	Pusher     pusher.Pusher         `json:"pusher"`
 }
