@@ -5,25 +5,18 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
-	"log"
 	"strings"
 )
 
 func (s *Services) ValidatedHash(signature string, payload []byte) error {
 
-	log.Println(signature)
-
 	hash := strings.TrimPrefix(signature, "sha256=")
-
-	log.Println(hash)
 
 	if hash == "" {
 		return errors.New("Signature invalid")
 	}
 
 	secret := s.Config.Secret
-
-	log.Printf("secret:%s\n", secret)
 
 	decoded, err := hex.DecodeString(hash)
 
@@ -36,9 +29,6 @@ func (s *Services) ValidatedHash(signature string, payload []byte) error {
 	mac.Write(payload)
 
 	calculatedHash := mac.Sum(nil)
-
-	log.Printf("decoded:%s\n", string(decoded))
-	log.Printf("calculatedHash:%s\n", string(calculatedHash))
 
 	if !hmac.Equal(decoded, calculatedHash) {
 		return errors.New("The signature is invalid")
