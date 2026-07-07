@@ -23,7 +23,9 @@ func (s *Services) DecodeMessage(event string, body []byte) {
 			return
 		}
 
-		fmt.Println(push)
+		message := "Se ha hecho un cambio en la rama: " + push.Ref + "\nPor el siguiente usuario: " + push.Pusher.Name + "\n"
+
+		fmt.Println(message)
 
 	default:
 		fmt.Printf("In this case the event is: %s \n", event)
