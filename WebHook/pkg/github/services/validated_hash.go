@@ -23,6 +23,8 @@ func (s *Services) ValidatedHash(signature string, payload []byte) error {
 
 	secret := s.Config.Secret
 
+	log.Printf("secret:%s\n", secret)
+
 	decoded, err := hex.DecodeString(hash)
 
 	if err != nil {
