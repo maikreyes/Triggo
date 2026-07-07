@@ -1,0 +1,38 @@
+package services
+
+import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
+	"errors"
+	"strings"
+)
+
+func (s *Services) ValidatedHash(signature string, payload []byte) error {
+
+	hash := strings.TrimPrefix(signature, "sha256=")
+
+	if hash == "" {
+		return errors.New("Signature invalid")
+	}
+
+	secret := s.Config.Secret
+
+	decoded, err := hex.DecodeString(hash)
+
+	if err != nil {
+		return errors.New("Error to decode hash")
+	}
+
+	mac := hmac.New(sha256.New, []byte(secret))
+
+	mac.Write(payload)
+
+	calculatedHash := mac.Sum(nil)
+
+	if !hmac.Equal(decoded, calculatedHash) {
+		return errors.New("The signature is invalid")
+	}
+
+	return nil
+}
