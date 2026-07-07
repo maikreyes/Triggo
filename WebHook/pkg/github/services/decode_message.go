@@ -13,8 +13,4 @@ func (s *Services) DecodeMessage(event string, body string) {
 		fmt.Printf("In this case the event is: %s \n", event)
 	}
 
-	fmt.Println("=== PAYLOAD RECIBIDO ===")
-	fmt.Println(body)
-	fmt.Println("========================")
-
 }
