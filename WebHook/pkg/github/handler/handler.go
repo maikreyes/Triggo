@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"triggo/internal/ports"
+	"triggo/pkg/ports"
 )
 
 type Handler struct {

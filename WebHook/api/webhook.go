@@ -2,9 +2,9 @@ package api
 
 import (
 	"net/http"
-	"triggo/internal/config"
-	"triggo/internal/github/handler"
-	"triggo/internal/github/services"
+	"triggo/pkg/config"
+	"triggo/pkg/github/handler"
+	"triggo/pkg/github/services"
 )
 
 func Webhook(w http.ResponseWriter, r *http.Request) {

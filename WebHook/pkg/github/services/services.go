@@ -1,6 +1,6 @@
 package services
 
-import "triggo/internal/config"
+import "triggo/pkg/config"
 
 type Services struct {
 	Config *config.Config

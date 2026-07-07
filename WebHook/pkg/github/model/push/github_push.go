@@ -1,6 +1,6 @@
 package push
 
-import "triggo/internal/github/model/commit"
+import "triggo/pkg/github/model/commit"
 
 type GithubPush struct {
 	Commit     commit.GithubCommit `json:"head_commit"`
