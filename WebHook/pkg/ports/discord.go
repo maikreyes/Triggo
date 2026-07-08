@@ -8,4 +8,5 @@ import (
 type DiscordServices interface {
 	CreateEmbed(event string, message string) embed.Embed
 	CreateDiscordPayload(e embed.Embed) payload.Payload
+	SendPayload(p payload.Payload) error
 }
