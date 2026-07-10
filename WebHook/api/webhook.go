@@ -9,7 +9,7 @@ import (
 	RServices "triggo/pkg/repository/services"
 )
 
-var globalHandler *handler.Handler
+var webhookHandler *handler.Handler
 
 func init() {
 	cfg := config.NewConfig()
@@ -28,11 +28,11 @@ func init() {
 	//Discord configuration
 	DiscordServices := DServices.NewServices(cfg, RepositoryServices)
 
-	globalHandler = handler.Newhandler(GithubServices, DiscordServices)
+	webhookHandler = handler.Newhandler(GithubServices, DiscordServices)
 }
 
 func Webhook(w http.ResponseWriter, r *http.Request) {
 
-	globalHandler.WebhookHandler(w, r)
+	webhookHandler.WebhookHandler(w, r)
 
 }
