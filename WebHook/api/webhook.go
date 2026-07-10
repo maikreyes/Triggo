@@ -6,10 +6,14 @@ import (
 	DServices "triggo/pkg/discord/services"
 	"triggo/pkg/github/handler"
 	GServices "triggo/pkg/github/services"
+	"triggo/pkg/middleware"
+	RepoHandler "triggo/pkg/repository/handler"
 	RServices "triggo/pkg/repository/services"
 )
 
 var webhookHandler *handler.Handler
+var setupHandler *RepoHandler.Handler
+var middle *middleware.Middleware
 
 func init() {
 	cfg := config.NewConfig()
@@ -29,6 +33,8 @@ func init() {
 	DiscordServices := DServices.NewServices(cfg, RepositoryServices)
 
 	webhookHandler = handler.Newhandler(GithubServices, DiscordServices)
+	setupHandler = RepoHandler.NewHandler(RepositoryServices)
+	middle = middleware.NewMiddleware(cfg)
 }
 
 func Webhook(w http.ResponseWriter, r *http.Request) {
