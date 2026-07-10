@@ -6,6 +6,13 @@ import (
 
 func SetupHandler(w http.ResponseWriter, r *http.Request) {
 
+	err := initApp()
+
+	if err != nil {
+		http.Error(w, "Error interno iniciando la aplicación: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	isOptions := middle.Cors(w, r)
 
 	if isOptions {
