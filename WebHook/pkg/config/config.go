@@ -4,12 +4,12 @@ import "os"
 
 type Config struct {
 	Secret string
-	DUrl   string
+	DSN    string
 }
 
 func NewConfig() *Config {
 	return &Config{
 		Secret: os.Getenv("GITHUB_WEBHOOK_SECRET"),
-		DUrl:   os.Getenv("DISCORD_WEBHOOK_URL"),
+		DSN:    os.Getenv("CONNECTION_STRING"),
 	}
 }
