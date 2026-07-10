@@ -14,7 +14,10 @@ func (s *Services) ConnectDatabase() (*gorm.DB, error) {
 		return s.DB, nil
 	}
 
-	db, err := gorm.Open(postgres.Open(s.Config.DSN), &gorm.Config{})
+	db, err := gorm.Open(postgres.New(postgres.Config{
+		DSN:                  s.Config.DSN,
+		PreferSimpleProtocol: true,
+	}), &gorm.Config{})
 
 	if err != nil {
 		return nil, err

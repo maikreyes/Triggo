@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strconv"
 	"time"
 	"triggo/pkg/discord/model/payload"
 	messainfromation "triggo/pkg/github/model/messa_infromation"
@@ -20,13 +19,7 @@ func (s *Services) SendPayload(p payload.Payload, f messainfromation.MessaInform
 		return fmt.Errorf("error converting payload to JSON: %w", err)
 	}
 
-	installationId, err := strconv.ParseInt(f.Installation.Id, 10, 64)
-
-	if err != nil {
-		return fmt.Errorf("Installation Id don´t exist")
-	}
-
-	userInformation, err := s.Repository.SearchRecord(installationId, f.Repository.Name)
+	userInformation, err := s.Repository.SearchRecord(f.Installation.Id, f.Repository.FullName)
 
 	if err != nil {
 		return fmt.Errorf("User don´t found")

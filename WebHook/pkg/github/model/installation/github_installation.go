@@ -1,5 +1,5 @@
 package installation
 
 type Installation struct {
-	Id string `json:"id"`
+	Id int64 `json:"id"`
 }
