@@ -1,14 +1,23 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"os"
 
 	"triggo/api"
+
+	"github.com/joho/godotenv"
 )
 
 func main() {
+
+	err := godotenv.Load()
+
+	if err != nil {
+		fmt.Println("Dont found .env %w", err)
+	}
 
 	mux := http.NewServeMux()
 
