@@ -21,6 +21,7 @@ func main() {
 
 	mux := http.NewServeMux()
 
+	mux.HandleFunc("/api/get_repositories", api.GetRepositories)
 	mux.HandleFunc("/api/setup", api.SetupHandler)
 	mux.HandleFunc("/api/webhook", api.Webhook)
 

@@ -6,6 +6,7 @@ import (
 	DServices "triggo/pkg/discord/services"
 	"triggo/pkg/github/handler"
 	GServices "triggo/pkg/github/services"
+	JServices "triggo/pkg/jwt/services"
 	"triggo/pkg/middleware"
 	RepoHandler "triggo/pkg/repository/handler"
 	RServices "triggo/pkg/repository/services"
@@ -26,8 +27,11 @@ func initApp() error {
 		return err
 	}
 
+	//JWT configuration
+	JWTServices := JServices.NewServices(cfg)
+
 	//GitHub configuration
-	GithubServices := GServices.NewServices(cfg)
+	GithubServices := GServices.NewServices(cfg, JWTServices)
 
 	//Discord configuration
 	DiscordServices := DServices.NewServices(cfg, RepositoryServices)
