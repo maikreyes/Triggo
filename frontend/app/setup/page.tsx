@@ -1,9 +1,13 @@
-import WebhookForm from "./component/webhookform";
+import { Suspense } from "react";
+import WebhookForm from "./component/webhookform"; 
 
-export default function Setup() {
+export default function SetupPage() {
     return (
-        <div className="flex flex-col items-center mt-16">
-            <WebhookForm/>
-        </div>
-    )
+        <main className="min-h-screen flex items-center justify-center">
+            {}
+            <Suspense fallback={<p>Cargando configuración...</p>}>
+                <WebhookForm />
+            </Suspense>
+        </main>
+    );
 }
