@@ -3,10 +3,11 @@ package services
 import (
 	"encoding/json"
 	"fmt"
+	messainfromation "triggo/pkg/github/model/messa_infromation"
 	"triggo/pkg/github/model/push"
 )
 
-func (s *Services) DecodeMessage(event string, body []byte) string {
+func (s *Services) DecodeMessage(event string, body []byte) (messainfromation.MessaInformation, string) {
 
 	switch event {
 	case "branch":
@@ -14,20 +15,26 @@ func (s *Services) DecodeMessage(event string, body []byte) string {
 	case "push":
 
 		var push push.GithubPush
+		var info messainfromation.MessaInformation
 
 		err := json.Unmarshal(body, &push)
 
 		if err != nil {
 			fmt.Println("Error to decode message")
-			return ""
+			return messainfromation.MessaInformation{}, ""
 		}
 
 		message := "Se ha hecho un cambio en la rama: " + push.Ref + "\nPor el siguiente usuario: " + push.Pusher.Name + "\n"
 
-		return message
+		info = messainfromation.MessaInformation{
+			Installation: push.Installation,
+			Repository:   push.Repository,
+		}
+
+		return info, message
 
 	default:
-		return "In this case the event is: %s \n" + event
+		return messainfromation.MessaInformation{}, "In this case the event is: %s \n" + event
 	}
-	return ""
+	return messainfromation.MessaInformation{}, ""
 }

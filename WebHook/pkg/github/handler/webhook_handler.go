@@ -29,12 +29,12 @@ func (h *Handler) WebhookHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	message := h.GServices.DecodeMessage(event, bodyBites)
+	info, message := h.GServices.DecodeMessage(event, bodyBites)
 
 	embed := h.DServices.CreateEmbed(event, message)
 	payload := h.DServices.CreateDiscordPayload(embed)
 
-	err = h.DServices.SendPayload(payload)
+	err = h.DServices.SendPayload(payload, info)
 
 	if err != nil {
 		log.Println("Discord Service Error:", err)

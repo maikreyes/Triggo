@@ -8,9 +8,10 @@ import (
 	"net/http"
 	"time"
 	"triggo/pkg/discord/model/payload"
+	messainfromation "triggo/pkg/github/model/messa_infromation"
 )
 
-func (s *Services) SendPayload(p payload.Payload) error {
+func (s *Services) SendPayload(p payload.Payload, f messainfromation.MessaInformation) error {
 
 	b, err := json.Marshal(p)
 
@@ -18,7 +19,13 @@ func (s *Services) SendPayload(p payload.Payload) error {
 		return fmt.Errorf("error converting payload to JSON: %w", err)
 	}
 
-	req, err := http.NewRequest(http.MethodPost, s.Config.DUrl, bytes.NewBuffer(b))
+	userInformation, err := s.Repository.SearchRecord(f.Installation.Id, f.Repository.FullName)
+
+	if err != nil {
+		return fmt.Errorf("User don´t found")
+	}
+
+	req, err := http.NewRequest(http.MethodPost, userInformation.DiscordUrl, bytes.NewBuffer(b))
 
 	if err != nil {
 		return fmt.Errorf("Error creating HTTP request: %w", err)

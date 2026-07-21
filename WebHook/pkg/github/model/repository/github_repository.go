@@ -1,5 +1,5 @@
 package repository
 
 type Repository struct {
-	Name string `json:"name"`
+	FullName string `json:"full_name"`
 }
