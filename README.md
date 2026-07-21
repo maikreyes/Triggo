@@ -1,110 +1,121 @@
-# Triggo 🔔
+# Triggo
 
-**Triggo** es un webhook GitHub App escrito en Go que escucha eventos de un repositorio de GitHub (por ejemplo, `push`) y los reenvía como notificaciones formateadas a un canal de Discord mediante un *embed*.
+**Triggo** es una GitHub App que reenvía notificaciones de eventos `push` de tus repositorios hacia canales de Discord, mostrando la información como embeds formateados. La versión `v4` evoluciona el proyecto hacia una arquitectura completa de dos componentes: un backend en Go y un frontend en Next.js que permite configurar visualmente la integración por repositorio.
 
-Está desplegado como función serverless en Vercel: **[triggo-webhook.vercel.app](https://triggo-webhook.vercel.app)**
+## Índice
 
-## ✨ Características
+- [Arquitectura](#arquitectura)
+- [Características principales](#características-principales)
+- [Estructura del proyecto](#estructura-del-proyecto)
+- [Flujo de funcionamiento](#flujo-de-funcionamiento)
+- [Endpoints de la API](#endpoints-de-la-api)
+- [Variables de entorno](#variables-de-entorno)
+- [Puesta en marcha](#puesta-en-marcha)
+- [Stack tecnológico](#stack-tecnológico)
+- [Licencia](#licencia)
 
-- Recibe y valida webhooks de GitHub usando la firma HMAC-SHA256 (`X-Hub-Signature-256`).
-- Decodifica el payload del evento recibido (actualmente soporta `push`).
-- Construye un *embed* de Discord con la información del evento (rama modificada y usuario que hizo el push).
-- Envía el mensaje formateado a un canal de Discord vía Discord Webhooks.
-- Arquitectura desacoplada por capas (handler / services / ports / models), lo que facilita añadir soporte para nuevos eventos o nuevos destinos de notificación.
+## Arquitectura
 
-## 🏗️ Arquitectura
+El proyecto está dividido en dos módulos independientes dentro del mismo repositorio:
 
-El proyecto sigue un enfoque inspirado en arquitectura hexagonal, separando responsabilidades en paquetes independientes:
+- **`WebHook/`** — API en Go que recibe los webhooks de GitHub, valida su firma, los transforma en un mensaje y los reenvía a Discord. También expone endpoints para que el frontend liste repositorios y registre la configuración de cada uno.
+- **`frontend/`** — Aplicación en Next.js que sirve como panel de configuración: permite al usuario, luego de instalar la GitHub App, elegir un repositorio y asociarlo a una URL de webhook de Discord.
+
+## Características principales
+
+- **Autenticación como GitHub App**: generación de JWT firmado con RS256 (`golang-jwt/jwt`) usando el `App ID` y una clave privada RSA, para autenticarse ante la API de GitHub y obtener tokens de instalación.
+- **Validación de firma de webhooks**: verificación del header `X-Hub-Signature-256` antes de procesar cualquier evento entrante.
+- **Multi-tenant por repositorio**: cada combinación `installation_id` + `repository` se persiste en PostgreSQL (vía GORM) junto a su propia URL de Discord, permitiendo que múltiples repositorios e instalaciones envíen a distintos canales.
+- **Reenvío a Discord**: construcción de un embed a partir del evento `push` (rama, usuario que hizo el push, repositorio) y envío como payload a la URL de webhook configurada.
+- **Panel de configuración (frontend)**: formulario que consulta los repositorios disponibles de la instalación (`/api/repositories`) y registra la URL de Discord para el repositorio elegido (`/api/setup`).
+- **CORS configurado** mediante middleware propio para permitir la comunicación entre el frontend y la API.
+
+## Estructura del proyecto
 
 ```
-WebHook/
-├── api/
-│   └── webhook.go              # Entry point (función serverless de Vercel)
-├── pkg/
-│   ├── config/
-│   │   └── config.go            # Carga de variables de entorno
-│   ├── ports/
-│   │   ├── discord.go           # Interfaz de servicios de Discord
-│   │   └── github.go            # Interfaz de servicios de GitHub
-│   ├── github/
-│   │   ├── handler/             # Manejo de la petición HTTP entrante
-│   │   ├── services/             # Validación de firma y decodificación de eventos
-│   │   └── model/                # Estructuras del payload de GitHub (push, pusher, repository)
-│   └── discord/
-│       ├── services/              # Construcción del embed y payload de Discord
-│       └── model/                 # Estructuras del embed y payload de Discord
-├── go.mod
-└── go.sum
+Triggo/
+├── WebHook/                     # Backend en Go
+│   ├── cmd/
+│   │   └── main.go              # Punto de entrada, registro de rutas HTTP
+│   ├── api/                     # Handlers HTTP expuestos (webhook, setup, repositories)
+│   └── pkg/
+│       ├── config/              # Carga de configuración desde variables de entorno
+│       ├── github/               # Modelos, servicios y handler relacionados a GitHub
+│       │   ├── handler/         # WebhookHandler, GetRepositoriesHandler
+│       │   ├── model/            # push, installation, repository, pusher, etc.
+│       │   └── services/        # DecodeMessage, ValidatedHash, RequestAccessToken...
+│       ├── jwt/services/        # Generación de JWT (RS256) para la GitHub App
+│       ├── discord/              # Construcción y envío de embeds/payloads a Discord
+│       ├── repository/           # Persistencia (GORM/PostgreSQL) de la config por repo
+│       └── middleware/          # CORS y middlewares comunes
+│
+└── frontend/                    # Panel de configuración en Next.js
+    └── app/
+        ├── page.tsx
+        └── setup/
+            ├── page.tsx
+            ├── component/       # AppHeader, LabeledInput, SelectInput, WebhookForm
+            └── customHooks/     # useFetchRepositories, useSubmitWebhook
 ```
 
-**Flujo de una petición:**
+## Flujo de funcionamiento
 
-1. GitHub envía un webhook a `WebHook/api/webhook.go`.
-2. `GithubServices.ValidatedHash` valida que la firma del payload coincide con el *secret* configurado.
-3. `GithubServices.DecodeMessage` interpreta el evento (`push`, etc.) y arma un mensaje legible.
-4. `DiscordServices.CreateEmbed` y `CreateDiscordPayload` transforman ese mensaje en un embed de Discord.
-5. El payload resultante se envía por POST a la URL del webhook de Discord configurada.
+1. El usuario instala la GitHub App en uno o varios repositorios y es redirigido al frontend (`/setup?installation_id=...`).
+2. El frontend llama a `GET /api/repositories` para listar los repositorios disponibles de esa instalación (el backend genera un JWT, solicita un *installation access token* a GitHub y consulta los repositorios).
+3. El usuario selecciona un repositorio e ingresa la URL del webhook de Discord destino; el frontend envía esta configuración a `POST /api/setup`, que la persiste en PostgreSQL.
+4. Cuando ocurre un `push` en el repositorio, GitHub envía el evento a `POST /api/webhook`. El backend valida la firma, decodifica el mensaje, busca la configuración correspondiente (`installation_id` + `repository`) y reenvía un embed formateado a la URL de Discord asociada.
 
-## 🔧 Requisitos
+## Endpoints de la API
 
-- [Go](https://go.dev/) 1.26.4 o superior
-- Un servidor de Discord con un [webhook configurado](https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks)
-- Un repositorio de GitHub donde configurar el webhook
+| Método | Ruta | Descripción |
+|---|---|---|
+| `POST` | `/api/webhook` | Recibe y valida los eventos de GitHub, y los reenvía a Discord. |
+| `GET` | `/api/repositories` | Lista los repositorios de una instalación (`?installation_id=`). |
+| `POST` | `/api/setup` | Registra la asociación repositorio → URL de Discord. |
 
-## ⚙️ Configuración
+## Variables de entorno
 
-Triggo se configura mediante variables de entorno:
+El backend (`WebHook/`) requiere las siguientes variables:
 
-| Variable                | Descripción                                                                 |
-| ------------------------ | ---------------------------------------------------------------------------- |
-| `GITHUB_WEBHOOK_SECRET`  | Secreto usado para validar la firma HMAC-SHA256 del webhook de GitHub       |
-| `DISCORD_WEBHOOK_URL`    | URL del webhook de Discord al que se enviarán las notificaciones            |
+| Variable | Descripción |
+|---|---|
+| `GITHUB_APP_ID` | ID numérico de la GitHub App. |
+| `GITHUB_PRIVATE_KEY_BASE64` | Clave privada RSA de la App, codificada en Base64. |
+| `GITHUB_WEBHOOK_SECRET` | Secreto usado para validar la firma HMAC de los webhooks. |
+| `POSTGRES_URL_NON_POOLING` | Cadena de conexión a PostgreSQL. |
+| `FRONT_URL` | URL del frontend, usada para la configuración de CORS. |
+| `PORT` | Puerto del servidor (por defecto `8080`). |
 
-Puedes definirlas en un archivo `.env` local (ignorado por git) o como variables de entorno en tu plataforma de despliegue (por ejemplo, Vercel).
+El frontend (`frontend/`) requiere:
 
-## 🚀 Instalación y uso local
+| Variable | Descripción |
+|---|---|
+| `NEXT_PUBLIC_WEBHOOK_URL` | URL base de la API del backend. |
+
+## Puesta en marcha
+
+### Backend
 
 ```bash
-# Clonar el repositorio
-git clone https://github.com/maikreyes/Triggo.git
-cd Triggo/WebHook
-
-# Instalar dependencias
-go mod tidy
-
-# Definir las variables de entorno necesarias
-export GITHUB_WEBHOOK_SECRET="tu_secreto"
-export DISCORD_WEBHOOK_URL="https://discord.com/api/webhooks/..."
-
-# Ejecutar
-go run api/webhook.go
+cd WebHook
+cp .env.example .env   # completar con tus credenciales
+go run cmd/main.go
 ```
 
-## ☁️ Despliegue
+### Frontend
 
-El proyecto está preparado para desplegarse como función serverless en **Vercel** (de ahí la carpeta `api/`). Basta con:
+```bash
+cd frontend
+pnpm install
+pnpm dev
+```
 
-1. Importar el repositorio en Vercel.
-2. Configurar las variables de entorno `GITHUB_WEBHOOK_SECRET` y `DISCORD_WEBHOOK_URL` en el panel del proyecto.
-3. Desplegar y usar la URL generada (`https://<tu-proyecto>.vercel.app/api/webhook`) como *Payload URL* al configurar el webhook en GitHub.
+## Stack tecnológico
 
-### Configurar el webhook en GitHub
+- **Backend**: Go 1.26, `net/http`, `golang-jwt/jwt`, GORM + driver PostgreSQL, `godotenv`, `google/uuid`.
+- **Frontend**: Next.js 16, React 19, TypeScript, Tailwind CSS 4.
+- **Infraestructura**: Vercel (despliegue), PostgreSQL.
 
-1. Ve a **Settings → Webhooks → Add webhook** en tu repositorio.
-2. En **Payload URL**, coloca la URL de tu despliegue (ej. `https://triggo-webhook.vercel.app/api/webhook`).
-3. En **Content type**, selecciona `application/json`.
-4. En **Secret**, coloca el mismo valor que usaste en `GITHUB_WEBHOOK_SECRET`.
-5. Selecciona los eventos que quieras enviar (por ejemplo, `push`).
+## Licencia
 
-## 📌 Eventos soportados
-
-- ✅ `push`
-- 🔜 Otros eventos pueden añadirse extendiendo `DecodeMessage` y `CreateEmbed`.
-
-## 📄 Licencia
-
-Este proyecto está bajo la licencia [MIT](./LICENSE).
-
-## 👤 Autor
-
-Desarrollado por **[Michael Estiven Reyes Escobar](https://github.com/maikreyes)**.
+Este proyecto está bajo la licencia MIT. Ver el archivo [LICENSE](./LICENSE) para más detalles.
