@@ -3,6 +3,8 @@ package handler
 import (
 	"io"
 	"net/http"
+
+	"github.com/google/uuid"
 )
 
 func (h *Handler) RepositoryHandler(w http.ResponseWriter, r *http.Request) {
@@ -22,6 +24,8 @@ func (h *Handler) RepositoryHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error to try decode record", http.StatusInternalServerError)
 		return
 	}
+
+	record.Id = uuid.New()
 
 	err = h.Services.CreateRecord(record)
 
